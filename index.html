@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0a0a0a;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="screen-orientation" content="landscape">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Zones Check-In · 4C</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #0a0a0a;
+  --blue: #5B9BD5; --blue2: #4A7FB5; --blue3: #7AB8E8;
+  --green: #4CAF7D; --green2: #3A9166; --green3: #6DD4A0;
+  --yellow: #F5C842; --yellow2: #D4A820; --yellow3: #FFE080;
+  --red: #E8524A; --red2: #C43930; --red3: #FF7B74;
+  --text: #ffffff; --muted: rgba(255,255,255,0.5);
+}
+body { background: #0a0a0a !important; color: #ffffff; font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow: hidden; height: 100vh; }
+.screen { display: none; position: absolute; inset: 0; overflow: hidden; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* HOME */
+#home-screen { align-items: center; justify-content: center; }
+.home-bubbles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.home-bubbles .bubble { position: absolute; border-radius: 50%; opacity: 0.18; animation: drift 8s ease-in-out infinite; }
+@keyframes drift { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(15px,-20px) scale(1.04);} 66%{transform:translate(-10px,12px) scale(0.97);} }
+.home-center { position: relative; z-index: 2; text-align: center; padding: 2rem; }
+.home-center h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2.2rem,6vw,3.5rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0.5rem; }
+.home-center .sub { color: var(--muted); font-size: 1rem; margin-bottom: 3rem; }
+.home-center .date-chip { display: inline-block; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.85rem; color: rgba(255,255,255,0.7); margin-bottom: 2.5rem; }
+.big-start-btn { display: inline-flex; align-items: center; gap: 0.75rem; background: white; color: #0a0a0a; border: none; border-radius: 60px; padding: 1.1rem 2.5rem; font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 8px 40px rgba(255,255,255,0.15); }
+.big-start-btn:hover { transform: scale(1.04); }
+.big-start-btn:active { transform: scale(0.98); }
+.home-footer { position: absolute; bottom: 1.5rem; right: 1.5rem; z-index: 2; display: flex; gap: 0.5rem; }
+.icon-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 1.1rem; transition: background 0.2s; }
+.icon-btn:hover { background: rgba(255,255,255,0.14); color: white; }
+
+/* SHARED HEADER */
+.screen-header { padding: 1.25rem 1.5rem 1rem; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.screen-header h2 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; font-weight: 400; }
+.back-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 1rem; transition: background 0.15s; }
+.back-btn:hover { background: rgba(255,255,255,0.13); }
+
+/* PROGRESS */
+.progress-strip { height: 3px; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--green3), var(--green)); transition: width 0.4s ease; }
+
+/* NAMES */
+.names-prompt { padding: 1.25rem 1.5rem 0.75rem; flex-shrink: 0; }
+.names-prompt p { font-size: 0.9rem; color: var(--muted); }
+.names-prompt strong { color: white; font-size: 1.05rem; }
+.names-scroll { flex: 1; overflow-y: auto; padding: 0.5rem 1.25rem 2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.names-scroll::-webkit-scrollbar { width: 3px; }
+.names-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.name-row { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 0.9rem 1.25rem; cursor: pointer; transition: all 0.15s; }
+.name-row:hover { background: rgba(255,255,255,0.09); }
+.name-row:active { transform: scale(0.98); }
+.name-row.done-blue  { background: rgba(91,155,213,0.15); border-color: rgba(91,155,213,0.35); }
+.name-row.done-green { background: rgba(76,175,125,0.15); border-color: rgba(76,175,125,0.35); }
+.name-row.done-yellow{ background: rgba(245,200,66,0.15); border-color: rgba(245,200,66,0.35); }
+.name-row.done-red   { background: rgba(232,82,74,0.15);  border-color: rgba(232,82,74,0.35); }
+.name-text { font-size: 1.05rem; font-weight: 600; }
+.name-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.7rem; border-radius: 20px; opacity: 0.9; }
+.badge-blue   { background: rgba(91,155,213,0.25);  color: #9DCAEF; }
+.badge-green  { background: rgba(76,175,125,0.25);  color: #7DDBA8; }
+.badge-yellow { background: rgba(245,200,66,0.25);  color: #FFD866; }
+.badge-red    { background: rgba(232,82,74,0.25);   color: #FF9B95; }
+
+/* ZONE / FEELING SCREENS */
+.zone-student-name { padding: 0.5rem 1.5rem 0; font-size: 1rem; color: var(--muted); flex-shrink: 0; }
+.zone-student-name span { color: white; font-weight: 700; font-size: 1.1rem; }
+.zone-question, .feeling-question { padding: 0.5rem 1.5rem 1rem; font-family: 'DM Serif Display', serif; font-size: clamp(1.4rem,4vw,2rem); font-weight: 400; flex-shrink: 0; line-height: 1.2; }
+.zones-bubble-area { flex: 1; position: relative; overflow: hidden; }
+.feelings-bubble-area { flex: 1; position: relative; overflow-y: auto; overflow-x: hidden; }
+.zone-bubble { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; user-select: none; padding: 1rem; flex-direction: column; gap: 0.3rem; }
+.zone-bubble:hover { transform: scale(1.06); }
+.zone-bubble:active { transform: scale(0.96); }
+.zone-bubble.selected { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(255,255,255,0.4) !important; }
+.zone-bubble .b-name { font-family: 'DM Serif Display', serif; font-size: clamp(1rem,2.5vw,1.5rem); font-weight: 400; color: rgba(0,0,0,0.75); line-height: 1.1; }
+.zone-bubble .b-desc { font-size: clamp(0.6rem,1.5vw,0.75rem); font-weight: 600; color: rgba(0,0,0,0.55); line-height: 1.3; }
+.feeling-zone-label { padding: 0 1.5rem 1rem; flex-shrink: 0; display: flex; align-items: center; gap: 0.6rem; }
+.feeling-zone-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.feeling-zone-dot.blue   { background: var(--blue3); }
+.feeling-zone-dot.green  { background: var(--green3); }
+.feeling-zone-dot.yellow { background: var(--yellow3); }
+.feeling-zone-dot.red    { background: var(--red3); }
+.feeling-zone-text { font-size: 0.95rem; font-weight: 600; }
+.feeling-bubble { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; user-select: none; font-family: 'DM Sans', sans-serif; font-weight: 600; color: rgba(0,0,0,0.72); padding: 0.5rem; line-height: 1.2; }
+.feeling-bubble:hover { transform: scale(1.08); }
+.feeling-bubble:active { transform: scale(0.95); }
+.feeling-bubble.selected { transform: scale(1.12); box-shadow: 0 0 0 4px rgba(255,255,255,0.5); color: rgba(0,0,0,0.85); font-weight: 700; }
+.bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem 1.5rem 1.5rem; background: linear-gradient(transparent, rgba(10,10,10,0.95) 40%); z-index: 10; display: flex; align-items: center; gap: 1rem; }
+.selected-label { flex: 1; font-size: 0.95rem; }
+.sel-zone { font-weight: 700; font-size: 1rem; }
+.sel-feeling { color: var(--muted); font-size: 0.85rem; }
+.confirm-btn { background: white; color: #0a0a0a; border: none; border-radius: 50px; padding: 0.85rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.15s, opacity 0.15s; white-space: nowrap; }
+.confirm-btn:hover { transform: scale(1.03); }
+.confirm-btn:active { transform: scale(0.97); }
+.confirm-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+.bottom-bar.blue-bar   .sel-zone { color: var(--blue3); }
+.bottom-bar.green-bar  .sel-zone { color: var(--green3); }
+.bottom-bar.yellow-bar .sel-zone { color: var(--yellow3); }
+.bottom-bar.red-bar    .sel-zone { color: var(--red3); }
+
+/* DONE */
+#done-screen { align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+.done-bubble { width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes pop { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+#done-screen h2 { font-family: 'DM Serif Display', serif; font-size: 2rem; margin-bottom: 0.5rem; }
+#done-screen p { color: var(--muted); margin-bottom: 2.5rem; font-size: 1rem; }
+#done-screen .done-feeling { font-size: 1.1rem; font-weight: 600; margin-bottom: 2.5rem; }
+.done-actions { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; max-width: 300px; }
+.btn-white { background: white; color: #0a0a0a; border: none; border-radius: 50px; padding: 0.9rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 0.15s; }
+.btn-white:hover { transform: scale(1.03); }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,0.15); border-radius: 50px; padding: 0.9rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-ghost:hover { background: rgba(255,255,255,0.06); color: white; }
+
+/* PIN */
+#pin-screen { align-items: center; justify-content: center; padding: 2rem; }
+.pin-card { width: 100%; max-width: 360px; text-align: center; }
+.pin-card h2 { font-family: 'DM Serif Display', serif; font-size: 1.8rem; margin-bottom: 0.5rem; }
+.pin-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+.pin-dots { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
+.pin-dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all 0.15s; }
+.pin-dot.filled { background: white; }
+.pin-dot.error { background: var(--red3) !important; }
+.pin-keypad { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; margin-bottom: 1rem; }
+.pin-key { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 1.6rem; cursor: pointer; color: white; transition: background 0.12s, transform 0.1s; user-select: none; }
+.pin-key:hover { background: rgba(255,255,255,0.13); }
+.pin-key:active { transform: scale(0.92); background: rgba(255,255,255,0.2); }
+.pin-key.del { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; color: var(--muted); }
+.pin-error { color: var(--red3); font-size: 0.85rem; height: 1.2rem; }
+
+/* DATA */
+#data-screen { overflow: hidden; }
+.data-content { flex: 1; overflow: auto; padding: 1rem 1.5rem 2rem; }
+.data-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.75rem; margin-bottom: 1rem; }
+.stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0.875rem; text-align: center; }
+.stat-num { font-family: 'DM Serif Display', serif; font-size: 1.6rem; }
+.stat-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.1rem; }
+.stat-blue   .stat-num { color: var(--blue3); }
+.stat-green  .stat-num { color: var(--green3); }
+.stat-yellow .stat-num { color: var(--yellow3); }
+.stat-red    .stat-num { color: var(--red3); }
+
+/* Sheets push button row */
+.sheets-row { display: flex; gap: 0.75rem; margin-bottom: 1rem; align-items: stretch; }
+.sheets-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(52,168,83,0.15); border: 1px solid rgba(52,168,83,0.35); color: #5FCF80; border-radius: 10px; padding: 0.7rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+.sheets-btn:hover { background: rgba(52,168,83,0.25); }
+.sheets-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.sheets-btn .sheets-icon { font-size: 1.1rem; }
+.export-csv { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); border-radius: 10px; padding: 0.7rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.export-csv:hover { background: rgba(255,255,255,0.1); color: white; }
+.clear-btn { background: rgba(232,82,74,0.1); border: 1px solid rgba(232,82,74,0.25); color: var(--red3); border-radius: 10px; padding: 0.7rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.clear-btn:hover { background: rgba(232,82,74,0.2); }
+
+/* Sheets status */
+.sheets-status { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.75rem; min-height: 1.1rem; }
+.sheets-status.ok { color: #5FCF80; }
+.sheets-status.err { color: var(--red3); }
+
+.data-grid-wrap { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: auto; }
+.data-grid-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+.data-grid-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+table { border-collapse: collapse; min-width: 100%; }
+thead tr { background: rgba(255,255,255,0.06); }
+th { padding: 0.75rem 1rem; font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.5); text-align: left; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.07); letter-spacing: 0.04em; text-transform: uppercase; }
+.th-name { position: sticky; left: 0; background: rgba(18,18,18,0.98); border-right: 1px solid rgba(255,255,255,0.07); min-width: 140px; }
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+tbody tr:hover td { background: rgba(255,255,255,0.03); }
+td { padding: 0.65rem 1rem; font-size: 0.88rem; font-weight: 500; white-space: nowrap; }
+.td-name { position: sticky; left: 0; background: rgba(12,12,12,0.98); border-right: 1px solid rgba(255,255,255,0.07); font-weight: 700; font-size: 0.9rem; }
+tbody tr:hover .td-name { background: rgba(28,28,28,0.98); }
+.cell-pill { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 0.3rem 0.6rem; border-radius: 8px; font-size: 0.75rem; }
+.cell-zone { font-weight: 700; }
+.cell-feeling { opacity: 0.7; font-size: 0.7rem; }
+.cell-blue   { background: rgba(91,155,213,0.18);  border: 1px solid rgba(91,155,213,0.3); }
+.cell-green  { background: rgba(76,175,125,0.18);  border: 1px solid rgba(76,175,125,0.3); }
+.cell-yellow { background: rgba(245,200,66,0.18);  border: 1px solid rgba(245,200,66,0.3); }
+.cell-red    { background: rgba(232,82,74,0.18);   border: 1px solid rgba(232,82,74,0.3); }
+.cell-empty  { color: rgba(255,255,255,0.15); font-size: 0.8rem; }
+
+/* SETUP */
+#setup-screen { overflow: hidden; }
+.setup-scroll { flex: 1; overflow-y: auto; padding: 0 1.5rem 2rem; }
+.setup-inner { max-width: 480px; margin: 0 auto; padding-top: 0.5rem; }
+.field-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; display: block; margin-top: 1.5rem; }
+.dark-input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 0.875rem 1rem; color: white; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+.dark-input:focus { border-color: rgba(255,255,255,0.3); }
+.dark-input::placeholder { color: rgba(255,255,255,0.25); }
+.dark-textarea { min-height: 200px; resize: vertical; }
+.hint-text { font-size: 0.78rem; color: rgba(255,255,255,0.3); margin-top: 0.4rem; line-height: 1.5; }
+.hint-text a { color: rgba(100,200,140,0.8); text-decoration: none; }
+.hint-text a:hover { text-decoration: underline; }
+.setup-save-btn { width: 100%; background: white; color: #0a0a0a; border: none; border-radius: 14px; padding: 1rem; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 2rem; transition: transform 0.15s; }
+.setup-save-btn:hover { transform: scale(1.01); }
+.section-divider { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
+.section-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; margin-bottom: 0.25rem; }
+.section-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.5rem; line-height: 1.5; }
+
+/* SCRIPT MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(6px); }
+.modal-overlay.open { display: flex; }
+.script-modal { background: #141414; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 1.5rem; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; }
+.script-modal h3 { font-family: 'DM Serif Display', serif; font-size: 1.5rem; margin-bottom: 0.5rem; }
+.script-modal .modal-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.6; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.1); font-size: 0.75rem; font-weight: 700; margin-right: 0.5rem; flex-shrink: 0; }
+.step-row { display: flex; align-items: flex-start; margin-bottom: 1rem; font-size: 0.88rem; line-height: 1.6; color: rgba(255,255,255,0.8); }
+.code-block { background: #0d0d0d; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.875rem 1rem; font-family: 'Courier New', monospace; font-size: 0.75rem; color: #7DDBA8; line-height: 1.6; white-space: pre-wrap; overflow-x: auto; margin: 0.75rem 0; }
+.copy-code-btn { background: rgba(76,175,125,0.15); border: 1px solid rgba(76,175,125,0.3); color: #6DD4A0; border-radius: 8px; padding: 0.5rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.15s; margin-bottom: 0.75rem; }
+.copy-code-btn:hover { background: rgba(76,175,125,0.25); }
+.modal-close { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.75rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: white; margin-top: 0.5rem; transition: background 0.15s; }
+.modal-close:hover { background: rgba(255,255,255,0.12); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: rgba(30,30,30,0.95); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.7rem 1.5rem; border-radius: 50px; font-size: 0.9rem; font-weight: 600; z-index: 9999; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); backdrop-filter: blur(12px); white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===== LANDSCAPE LAYOUT ===== */
+@media (orientation: landscape) {
+
+  /* HOME — left panel text, right panel bubbles */
+  #home-screen { flex-direction: row; }
+  .home-center { flex: 0 0 45%; text-align: left; padding: 2rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+  .home-center h1 { font-size: clamp(1.6rem,3.5vw,2.4rem); margin-bottom: 0.3rem; }
+  .home-center .date-chip { margin-bottom: 1rem; }
+  .home-center .sub { margin-bottom: 1.5rem; }
+  .home-footer { bottom: 1rem; right: 1rem; }
+
+  /* HEADER — slimmer */
+  .screen-header { padding: 0.65rem 1.5rem 0.6rem; }
+  .screen-header h2 { font-size: 1.15rem; }
+
+  /* NAMES — two column grid */
+  .names-prompt { padding: 0.6rem 1.5rem 0.4rem; }
+  .names-scroll { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0.45rem; padding: 0.5rem 1.25rem 1rem; align-content: start; }
+  .name-row { padding: 0.65rem 1rem; }
+  .name-text { font-size: 0.95rem; }
+
+  /* ZONE — compact header, larger bubble area */
+  .zone-student-name { padding: 0.3rem 1.5rem 0; font-size: 0.9rem; }
+  .zone-question { padding: 0.3rem 1.5rem 0.5rem; font-size: clamp(1.1rem,2.5vw,1.5rem); }
+
+  /* FEELING — compact header */
+  .feeling-zone-label { padding: 0 1.5rem 0.4rem; }
+  .feeling-question { padding: 0 1.5rem 0.5rem; font-size: clamp(1.1rem,2.5vw,1.5rem); }
+
+  /* DATA — side by side stats */
+  .data-content { padding: 0.75rem 1.25rem 1rem; }
+  .data-stats { grid-template-columns: repeat(4,1fr); gap: 0.5rem; margin-bottom: 0.75rem; }
+  .stat-num { font-size: 1.3rem; }
+
+  /* PIN — horizontal */
+  #pin-screen { flex-direction: row; justify-content: center; gap: 4rem; }
+
+  /* SETUP — wider columns */
+  .setup-inner { padding-top: 0; }
+  .field-label { margin-top: 1rem; }
+}
+</style>
+</head>
+<body style="background:#0a0a0a;margin:0;padding:0;">
+
+<!-- HOME -->
+<div id="home-screen" class="screen active">
+  <div class="home-bubbles" id="home-bg"></div>
+  <div class="home-center">
+    <div class="date-chip" id="home-date"></div>
+    <h1>How are you<br><em>feeling today?</em></h1>
+    <p class="sub" id="home-class-label"></p>
+    <br>
+    <button class="big-start-btn" onclick="goToNames()">Start Check-In →</button>
+  </div>
+  <div class="home-footer">
+    <div class="icon-btn" title="Teacher Data" onclick="goToPin()">📊</div>
+    <div class="icon-btn" title="Settings" onclick="showSetup()">⚙</div>
+  </div>
+</div>
+
+<!-- NAMES -->
+<div id="names-screen" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <h2>Who are you?</h2>
+    <div style="width:38px;"></div>
+  </div>
+  <div class="progress-strip"><div class="progress-fill" id="names-progress" style="width:0%"></div></div>
+  <div class="names-prompt"><p><strong id="names-count-label">Find your name and tap it</strong></p></div>
+  <div class="names-scroll" id="names-list"></div>
+</div>
+
+<!-- ZONE PICK -->
+<div id="zone-screen" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="goToNames()">←</button>
+    <div></div><div></div>
+  </div>
+  <div class="zone-student-name">Checking in for <span id="zone-for-name">–</span></div>
+  <div class="zone-question">Which colour best<br>describes how you feel?</div>
+  <div class="zones-bubble-area" id="zones-area"></div>
+  <div class="bottom-bar" id="zone-bottom-bar">
+    <div class="selected-label"><div class="sel-zone" id="zone-sel-label">Tap a colour to begin</div></div>
+    <button class="confirm-btn" id="zone-confirm-btn" onclick="confirmZone()" disabled>Next →</button>
+  </div>
+</div>
+
+<!-- FEELING PICK -->
+<div id="feeling-screen" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="backToZone()">←</button>
+    <div></div><div></div>
+  </div>
+  <div class="feeling-zone-label">
+    <div class="feeling-zone-dot" id="feeling-dot"></div>
+    <span class="feeling-zone-text" id="feeling-zone-name"></span>
+  </div>
+  <div class="feeling-question">Pick a feeling word,<br><em id="feeling-name-prompt">–</em></div>
+  <div class="feelings-bubble-area" id="feelings-area"></div>
+  <div class="bottom-bar" id="feeling-bottom-bar">
+    <div class="selected-label"><div class="sel-zone" id="feeling-sel-label">Tap a feeling word</div></div>
+    <button class="confirm-btn" id="feeling-confirm-btn" onclick="saveCheckin()" disabled>Save ✓</button>
+  </div>
+</div>
+
+<!-- DONE -->
+<div id="done-screen" class="screen">
+  <div class="done-bubble" id="done-bubble"></div>
+  <h2 id="done-heading">All done!</h2>
+  <p id="done-sub">Your check-in has been saved.</p>
+  <div class="done-feeling" id="done-feeling"></div>
+  <div class="done-actions">
+    <button class="btn-white" onclick="goToNames()">← Back to names</button>
+    <button class="btn-ghost" onclick="goHome()">Go to home</button>
+  </div>
+</div>
+
+<!-- PIN -->
+<div id="pin-screen" class="screen">
+  <div class="pin-card">
+    <h2>Teacher View</h2>
+    <p>Enter your PIN to access check-in data</p>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+      <div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-keypad">
+      <div class="pin-key" onclick="pinKey('1')">1</div>
+      <div class="pin-key" onclick="pinKey('2')">2</div>
+      <div class="pin-key" onclick="pinKey('3')">3</div>
+      <div class="pin-key" onclick="pinKey('4')">4</div>
+      <div class="pin-key" onclick="pinKey('5')">5</div>
+      <div class="pin-key" onclick="pinKey('6')">6</div>
+      <div class="pin-key" onclick="pinKey('7')">7</div>
+      <div class="pin-key" onclick="pinKey('8')">8</div>
+      <div class="pin-key" onclick="pinKey('9')">9</div>
+      <div style="visibility:hidden;" class="pin-key"></div>
+      <div class="pin-key" onclick="pinKey('0')">0</div>
+      <div class="pin-key del" onclick="pinDel()">⌫</div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <br>
+    <button class="btn-ghost" onclick="goHome()" style="width:100%;margin-top:0.5rem;">Cancel</button>
+  </div>
+</div>
+
+<!-- DATA -->
+<div id="data-screen" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <h2>Check-In Data</h2>
+    <div style="width:38px;"></div>
+  </div>
+  <div class="data-content">
+    <div class="data-stats" id="data-stats"></div>
+    <div class="sheets-row">
+      <button class="sheets-btn" id="sheets-push-btn" onclick="pushToSheets()">
+        <span class="sheets-icon">📊</span> Push to Google Sheets
+      </button>
+      <button class="export-csv" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+    <div class="sheets-row" style="margin-bottom:0.5rem;">
+      <button class="clear-btn" style="flex:1;" onclick="resetToday()">↺ Reset Today</button>
+      <button class="clear-btn" style="flex:1;opacity:0.6;" onclick="clearData()">🗑 Clear All</button>
+    </div>
+    <div class="sheets-status" id="sheets-status"></div>
+    <div id="confirm-bar" style="display:none;background:rgba(232,82,74,0.12);border:1px solid rgba(232,82,74,0.3);border-radius:12px;padding:0.875rem 1rem;margin-bottom:0.75rem;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+      <span id="confirm-msg" style="font-size:0.85rem;font-weight:600;color:#FF9B95;flex:1;"></span>
+      <button onclick="confirmAction()" style="background:#E8524A;border:none;border-radius:8px;padding:0.5rem 1rem;color:white;font-family:DM Sans,sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;white-space:nowrap;">Yes, clear it</button>
+      <button onclick="cancelAction()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:0.5rem 0.875rem;color:white;font-family:DM Sans,sans-serif;font-weight:600;font-size:0.85rem;cursor:pointer;">Cancel</button>
+    </div>
+    <div class="data-grid-wrap">
+      <div id="data-table-inner"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div id="setup-screen" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <h2>Settings</h2>
+    <div style="width:38px;"></div>
+  </div>
+  <div class="setup-scroll">
+    <div class="setup-inner">
+      <label class="field-label" style="margin-top:1rem;">Class Name</label>
+      <input type="text" id="setup-classname" class="dark-input" placeholder="e.g. 4C" />
+
+      <label class="field-label">Student Names <span style="font-size:0.75rem;opacity:0.6;">(one per line)</span></label>
+      <textarea id="setup-students" class="dark-input dark-textarea" placeholder="Amelia&#10;Lachlan&#10;Sophie"></textarea>
+
+      <label class="field-label">Teacher PIN <span style="font-size:0.75rem;opacity:0.6;">(4 digits)</span></label>
+      <input type="number" id="setup-pin" class="dark-input" placeholder="e.g. 1234" />
+      <p class="hint-text">Locks the Data view from students. Default: 1234</p>
+
+      <!-- SHEETS SECTION -->
+      <div class="section-divider">
+        <div class="section-title">📊 Google Sheets Integration</div>
+        <div class="section-sub">Connect once — then push today's data to your spreadsheet with one tap from the Data screen.</div>
+
+        <label class="field-label">Apps Script Webhook URL</label>
+        <input type="url" id="setup-webhook" class="dark-input" placeholder="https://script.google.com/macros/s/…/exec" />
+        <p class="hint-text">Paste your Google Apps Script Web App URL here. Don't have one yet? <a href="#" onclick="showScriptModal(); return false;">Tap here for setup instructions →</a></p>
+      </div>
+
+      <button class="setup-save-btn" onclick="saveSetup()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPS SCRIPT INSTRUCTIONS MODAL -->
+<div class="modal-overlay" id="script-modal">
+  <div class="script-modal">
+    <h3>Set up Google Sheets</h3>
+    <p class="modal-sub">This takes about 3 minutes. You only do it once. Every check-in will then appear in your spreadsheet automatically.</p>
+
+    <div class="step-row"><span class="step-num">1</span><div>Go to <strong>sheets.google.com</strong> and create a new spreadsheet. Name it <em>"4C Zones Check-In Log"</em>.</div></div>
+    <div class="step-row"><span class="step-num">2</span><div>In the spreadsheet, click <strong>Extensions → Apps Script</strong>.</div></div>
+    <div class="step-row"><span class="step-num">3</span><div>Delete everything in the editor and paste in this code:</div></div>
+
+    <button class="copy-code-btn" onclick="copyScript()">📋 Copy Script Code</button>
+    <div class="code-block" id="script-code">function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Log") || ss.insertSheet("Log");
+    
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["Timestamp", "Session", "Student", "Zone", "Feeling"]);
+      sheet.getRange(1,1,1,5).setFontWeight("bold");
+    }
+    
+    var timestamp = new Date().toLocaleString("en-AU");
+    var rows = data.rows;
+    
+    for (var i = 0; i < rows.length; i++) {
+      sheet.appendRow([
+        timestamp,
+        rows[i].session,
+        rows[i].student,
+        rows[i].zone,
+        rows[i].feeling
+      ]);
+    }
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({status:"ok", added: rows.length}))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({status:"error", message: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({status:"ok", message:"Zones Check-In webhook active"}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+
+    <div class="step-row"><span class="step-num">4</span><div>Click <strong>Save</strong> (💾), then click <strong>Deploy → New deployment</strong>.</div></div>
+    <div class="step-row"><span class="step-num">5</span><div>Set type to <strong>Web app</strong>. Set "Execute as" to <strong>Me</strong>. Set "Who has access" to <strong>Anyone</strong>. Click <strong>Deploy</strong>.</div></div>
+    <div class="step-row"><span class="step-num">6</span><div>Copy the <strong>Web app URL</strong> it gives you. It starts with <em>https://script.google.com/macros/s/…</em></div></div>
+    <div class="step-row"><span class="step-num">7</span><div>Paste that URL into <strong>Settings → Apps Script Webhook URL</strong> in this app. Done! ✅</div></div>
+
+    <button class="modal-close" onclick="closeScriptModal()">Got it — close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ZONE_COLORS = {
+  blue:   { main:'#5B9BD5', light:'#7AB8E8', dark:'#3A6E9E', label:'Blue Zone',   emoji:'😔', desc:'Sad · tired · bored · sick' },
+  green:  { main:'#4CAF7D', light:'#6DD4A0', dark:'#2E7A55', label:'Green Zone',  emoji:'😊', desc:'Happy · calm · focused · ready' },
+  yellow: { main:'#F5C842', light:'#FFE080', dark:'#C4960A', label:'Yellow Zone', emoji:'😬', desc:'Worried · silly · excited · frustrated' },
+  red:    { main:'#E8524A', light:'#FF7B74', dark:'#B52E27', label:'Red Zone',    emoji:'😡', desc:'Angry · terrified · out of control' }
+};
+
+const FEELINGS = {
+  blue:   ['Sad','Tired','Bored','Sick','Lonely','Disappointed','Numb','Exhausted','Down','Withdrawn','Lost','Flat','Hopeless','Unhappy','Sluggish','Unmotivated','Drained','Quiet'],
+  green:  ['Happy','Calm','Focused','Ready','Content','Grateful','Peaceful','Confident','Proud','Safe','Balanced','Thoughtful','Joyful','Understood','Appreciated','Supported','Included','Compassionate','Empathetic','At Ease','Comfortable','Relieved','Satisfied'],
+  yellow: ['Worried','Silly','Excited','Frustrated','Nervous','Anxious','Surprised','Confused','Overwhelmed','Restless','Hyper','Flustered','Apprehensive','Irritated','Jittery','Concerned','Embarrassed','Impatient','Unsure'],
+  red:    ['Angry','Furious','Terrified','Panicked','Explosive','Devastated','Enraged','Out of control','Frantic','Livid','Shocked','Stressed','Annoyed','Overwhelmed','Impulsive']
+};
+
+let state = { students:["Aadvik","Alara","Ayaan","Ayberk","Bihaan","Calvin","Camila","Flynn","Gurnaz","Harriet","Jacob","Jasmira","Jay","Lein","Lila","Lina","Louis","Oliver","Olivia","Roxy","Sandra","Tiffany A","Tiffany W","Vincent"], className:'4C', pin:'1234', webhookUrl:'', log:{} };
+let currentStudent=null, selectedZone=null, selectedFeeling=null, pinEntry='';
+
+function loadState() {
+  try { const s = localStorage.getItem('zones-v3'); if(s){ state=JSON.parse(s); return true; } } catch(e){}
+  return false;
+}
+function saveState() { localStorage.setItem('zones-v3', JSON.stringify(state)); }
+
+function getSessionKey() {
+  const date = getLocalDateStr();
+  const existing = Object.keys(state.log).find(k => k.startsWith(date));
+  if (existing) return existing;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  return `${date} ${hh}:${mm}`;
+}
+
+function setScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  const now = new Date();
+  document.getElementById('home-date').textContent =
+    now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('home-class-label').textContent = state.className || '4C';
+  renderHomeBubbles();
+  setScreen('home-screen');
+}
+
+function goToNames() { setScreen('names-screen'); renderNames(); }
+function goToPin() { pinEntry=''; renderPinDots(); setScreen('pin-screen'); }
+function backToZone() { setScreen('zone-screen'); }
+
+function showSetup() {
+  document.getElementById('setup-classname').value = state.className;
+  document.getElementById('setup-students').value = state.students.join('\n');
+  document.getElementById('setup-pin').value = state.pin;
+  document.getElementById('setup-webhook').value = state.webhookUrl || '';
+  setScreen('setup-screen');
+}
+
+function renderHomeBubbles() {
+  const el = document.getElementById('home-bg');
+  const bubbles = [
+    {z:'blue',  x:-5,  y:-8,  s:220, a:'7s 0s'},
+    {z:'green', x:60,  y:-10, s:190, a:'9s 1s'},
+    {z:'yellow',x:20,  y:65,  s:200, a:'8s 2s'},
+    {z:'red',   x:65,  y:55,  s:175, a:'6s 0.5s'},
+    {z:'blue',  x:45,  y:30,  s:130, a:'10s 3s'},
+    {z:'green', x:-5,  y:50,  s:160, a:'8s 1.5s'},
+  ];
+  el.innerHTML = bubbles.map(b =>
+    `<div class="bubble" style="background:${ZONE_COLORS[b.z].main};left:${b.x}%;top:${b.y}%;width:${b.s}px;height:${b.s}px;animation:drift ${b.a} ease-in-out infinite;"></div>`
+  ).join('');
+}
+
+function renderNames() {
+  const list = document.getElementById('names-list');
+  const sk = getSessionKey();
+  const todayLog = state.log[sk] || {};
+  const done = state.students.filter(n => todayLog[n]).length;
+  const total = state.students.length;
+  document.getElementById('names-progress').style.width = (total > 0 ? done/total*100 : 0) + '%';
+  document.getElementById('names-count-label').textContent =
+    done===total && total>0 ? `✅ Everyone's checked in!` : `${done} of ${total} checked in`;
+  list.innerHTML = state.students.map(name => {
+    const entry = todayLog[name];
+    const badge = entry
+      ? `<span style="display:inline-flex;align-items:center;gap:0.5rem;">
+           <span style="width:14px;height:14px;border-radius:50%;background:${ZONE_COLORS[entry.zone].main};box-shadow:0 0 8px ${ZONE_COLORS[entry.zone].main}88;flex-shrink:0;"></span>
+           <span style="font-size:0.8rem;color:rgba(255,255,255,0.35);font-weight:600;">✓ Done</span>
+         </span>`
+      : `<span style="font-size:0.8rem;color:rgba(255,255,255,0.25);font-weight:600;">Tap to check in</span>`;
+    return `<div class="name-row ${entry?'done-'+entry.zone:''}" onclick="selectStudent('${name.replace(/'/g,"\\'")}')">
+      <span class="name-text">${name}</span>${badge}
+    </div>`;
+  }).join('');
+}
+
+function selectStudent(name) {
+  currentStudent = name; selectedZone = null; selectedFeeling = null;
+  const sk = getSessionKey();
+  const ex = (state.log[sk]||{})[name];
+  if (ex) { selectedZone = ex.zone; selectedFeeling = ex.feeling; }
+  document.getElementById('zone-for-name').textContent = name;
+  renderZoneBubbles();
+  setScreen('zone-screen');
+}
+
+function renderZoneBubbles() {
+  var area = document.getElementById('zones-area');
+  var W = area.offsetWidth || 360;
+  var H = area.offsetHeight || 400;
+  var R = Math.min(W * 0.38, H * 0.38);
+  var layout = [
+    { zone:'red',    cx: W*0.28, cy: H*0.27 },
+    { zone:'yellow', cx: W*0.76, cy: H*0.27 },
+    { zone:'blue',   cx: W*0.28, cy: H*0.73 },
+    { zone:'green',  cx: W*0.76, cy: H*0.73 }
+  ];
+  area.style.overflow = 'hidden';
+  area.innerHTML = layout.map(function(item) {
+    var zone = item.zone;
+    var cx = item.cx;
+    var cy = item.cy;
+    var c = ZONE_COLORS[zone];
+    var sel = selectedZone === zone;
+    var r = sel ? R * 1.08 : R;
+    var shadow = sel
+      ? '0 0 0 6px rgba(255,255,255,0.5),0 16px 50px ' + c.main + '99'
+      : '0 8px 30px ' + c.main + '44';
+    return '<div class="zone-bubble ' + (sel ? 'selected' : '') + '"'
+      + ' data-zone="' + zone + '"'
+      + ' onclick="selectZone(this.dataset.zone)"'
+      + ' style="'
+      + 'left:' + (cx - r) + 'px;'
+      + 'top:' + (cy - r) + 'px;'
+      + 'width:' + (r * 2) + 'px;'
+      + 'height:' + (r * 2) + 'px;'
+      + 'background:' + c.main + ';'
+      + 'box-shadow:' + shadow + ';'
+      + 'z-index:' + (sel ? 2 : 1) + ';'
+      + '">'
+      + '<div class="b-name" style="font-size:' + (r * 0.13) + 'px;">' + c.label + '</div>'
+      + '<div class="b-desc" style="font-size:' + (r * 0.073) + 'px;">' + c.desc + '</div>'
+      + '</div>';
+  }).join('');
+  updateZoneBar();
+}
+
+function selectZone(z) { selectedZone=z; selectedFeeling=null; renderZoneBubbles(); }
+
+function updateZoneBar() {
+  const bar = document.getElementById('zone-bottom-bar');
+  bar.className = 'bottom-bar' + (selectedZone?' '+selectedZone+'-bar':'');
+  document.getElementById('zone-sel-label').textContent = selectedZone ? ZONE_COLORS[selectedZone].label : 'Tap a colour to begin';
+  document.getElementById('zone-confirm-btn').disabled = !selectedZone;
+}
+
+function confirmZone() {
+  if (!selectedZone) return;
+  document.getElementById('feeling-dot').className = 'feeling-zone-dot '+selectedZone;
+  document.getElementById('feeling-zone-name').textContent = ZONE_COLORS[selectedZone].label;
+  document.getElementById('feeling-name-prompt').textContent = currentStudent.split(' ')[0]+'?';
+  renderFeelingBubbles();
+  setScreen('feeling-screen');
+}
+
+function renderFeelingBubbles() {
+  var area = document.getElementById('feelings-area');
+  var W = area.offsetWidth || 360;
+  var feelings = FEELINGS[selectedZone];
+  var c = ZONE_COLORS[selectedZone];
+  var cols = 3;
+  var R = (W / cols) * 0.54;
+  var rowH = R * 1.72;
+  var rows = Math.ceil(feelings.length / cols);
+  var totalH = rows * rowH + R * 0.5;
+  area.style.position = 'relative';
+  area.style.height = totalH + 'px';
+  var sizeVar = [1.0,0.84,0.94,0.78,1.0,0.88,0.82,0.96,0.74,0.90,0.80,0.86,1.0,0.78,0.92,0.84,0.76,0.98];
+  area.innerHTML = feelings.map(function(f, i) {
+    var col = i % cols;
+    var row = Math.floor(i / cols);
+    var offset = (row % 2 === 0) ? 0 : R * 0.95;
+    var r = R * sizeVar[i % sizeVar.length];
+    var cx = col * (W / cols) + (W / cols) / 2 + offset;
+    var cy = row * rowH + R + 4;
+    var sel = selectedFeeling === f;
+    var fsize = r * (f.length > 10 ? 0.19 : f.length > 7 ? 0.23 : 0.27);
+    var shadow = sel
+      ? '0 0 0 5px rgba(255,255,255,0.5),0 8px 30px ' + c.main + '88'
+      : '0 4px 16px ' + c.main + '33';
+    return '<div class="feeling-bubble ' + (sel ? 'selected' : '') + '"'
+      + ' onclick="selectFeeling(this.dataset.name)"'
+      + ' data-name="' + f.replace(/"/g, '&quot;') + '"'
+      + ' style="'
+      + 'left:' + (cx - r) + 'px;'
+      + 'top:' + (cy - r) + 'px;'
+      + 'width:' + (r * 2) + 'px;'
+      + 'height:' + (r * 2) + 'px;'
+      + 'background:' + c.main + ';'
+      + 'font-size:' + fsize + 'px;'
+      + 'font-weight:' + (sel ? 700 : 600) + ';'
+      + 'box-shadow:' + shadow + ';'
+      + 'transform:' + (sel ? 'scale(1.1)' : 'scale(1)') + ';'
+      + 'z-index:' + (sel ? 3 : 1) + ';'
+      + '">' + f + '</div>';
+  }).join('');
+  updateFeelingBar();
+}
+
+function selectFeeling(name) { selectedFeeling=name; renderFeelingBubbles(); }
+
+function updateFeelingBar() {
+  document.getElementById('feeling-bottom-bar').className = 'bottom-bar'+(selectedZone?' '+selectedZone+'-bar':'');
+  document.getElementById('feeling-sel-label').textContent = selectedFeeling || 'Tap a feeling word';
+  document.getElementById('feeling-confirm-btn').disabled = !selectedFeeling;
+}
+
+function saveCheckin() {
+  if (!selectedZone || !selectedFeeling) return;
+  const sk = getSessionKey();
+  if (!state.log[sk]) state.log[sk] = {};
+  state.log[sk][currentStudent] = { zone: selectedZone, feeling: selectedFeeling };
+  saveState();
+  const c = ZONE_COLORS[selectedZone];
+  document.getElementById('done-bubble').style.background = c.main;
+  document.getElementById('done-bubble').textContent = c.emoji;
+  document.getElementById('done-heading').textContent = `Thanks, ${currentStudent.split(' ')[0]}!`;
+  document.getElementById('done-sub').textContent = 'Your check-in has been saved.';
+  document.getElementById('done-feeling').innerHTML = `<span style="color:${c.light}">${c.label}</span> · ${selectedFeeling}`;
+  setScreen('done-screen');
+}
+
+// PIN
+function renderPinDots() {
+  document.querySelectorAll('.pin-dot').forEach((d,i) => { d.classList.toggle('filled', i<pinEntry.length); d.classList.remove('error'); });
+  document.getElementById('pin-error').textContent = '';
+}
+function pinKey(k) {
+  if (pinEntry.length>=4) return;
+  pinEntry += k; renderPinDots();
+  if (pinEntry.length===4) {
+    setTimeout(() => {
+      if (pinEntry===state.pin) { pinEntry=''; renderDataScreen(); setScreen('data-screen'); }
+      else {
+        document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+        document.getElementById('pin-error').textContent = 'Incorrect PIN';
+        setTimeout(() => { pinEntry=''; renderPinDots(); }, 800);
+      }
+    }, 150);
+  }
+}
+function pinDel() { if (pinEntry.length>0) { pinEntry=pinEntry.slice(0,-1); renderPinDots(); } }
+
+// DATA
+function renderDataScreen() {
+  const sessions = Object.keys(state.log).sort().reverse();
+  const sk = getSessionKey();
+  const todayData = state.log[sk] || {};
+  const counts = {blue:0,green:0,yellow:0,red:0};
+  Object.values(todayData).forEach(e => { if(e.zone) counts[e.zone]++; });
+
+  document.getElementById('data-stats').innerHTML = Object.entries(counts).map(([z,n]) =>
+    `<div class="stat-card stat-${z}"><div class="stat-num">${n}</div><div class="stat-label">${ZONE_COLORS[z].label.replace(' Zone','')}</div></div>`
+  ).join('');
+
+  // Update push button state
+  const hasWebhook = !!state.webhookUrl;
+  const btn = document.getElementById('sheets-push-btn');
+  btn.disabled = !hasWebhook;
+  if (!hasWebhook) {
+    document.getElementById('sheets-status').textContent = 'No webhook URL set — go to Settings to connect Google Sheets';
+    document.getElementById('sheets-status').className = 'sheets-status';
+  } else {
+    document.getElementById('sheets-status').textContent = '';
+  }
+
+  if (!sessions.length) {
+    document.getElementById('data-table-inner').innerHTML =
+      `<div style="padding:2rem;text-align:center;color:rgba(255,255,255,0.3);font-size:0.9rem;">No check-in data yet.</div>`;
+    return;
+  }
+
+  const headerCols = sessions.map(sk => {
+    const parts = sk.split(' ');
+    const d = new Date(parts[0]);
+    const dayStr = d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+    const time = parts[1]||'';
+    return `<th>${dayStr}${time?`<br><span style="opacity:0.5;font-size:0.65rem;">${time}</span>`:''}`;
+  }).join('');
+
+  const rows = state.students.map(name => {
+    const cells = sessions.map(sk => {
+      const e = (state.log[sk]||{})[name];
+      if (!e) return `<td><span class="cell-empty">—</span></td>`;
+      return `<td><div class="cell-pill cell-${e.zone}"><span class="cell-zone">${ZONE_COLORS[e.zone].label.replace(' Zone','')}</span><span class="cell-feeling">${e.feeling}</span></div></td>`;
+    }).join('');
+    return `<tr><td class="td-name">${name}</td>${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('data-table-inner').innerHTML =
+    `<table><thead><tr><th class="th-name">Student</th>${headerCols}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// PUSH TO SHEETS
+async function pushToSheets() {
+  if (!state.webhookUrl) { showToast('No webhook URL — check Settings'); return; }
+  var btn = document.getElementById('sheets-push-btn');
+  var statusEl = document.getElementById('sheets-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="sheets-icon">⏳</span> Pushing…';
+  statusEl.className = 'sheets-status';
+  statusEl.textContent = 'Sending to Google Sheets…';
+
+  // Build today's date strings
+  var now = new Date();
+  var today = getLocalDateStr();
+  var displayDate = now.toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' });
+
+  // Push ALL sessions in the log
+  var allKeys = Object.keys(state.log);
+  if (allKeys.length === 0) {
+    showToast('No check-ins to push yet');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets';
+    return;
+  }
+
+  var rows = [];
+  allKeys.forEach(function(sessionKey) {
+    var sessionEntries = state.log[sessionKey];
+    var sessionDate = sessionKey.split(' ')[0];
+    var sessionTime = sessionKey.split(' ')[1] || '';
+    var d = new Date(sessionDate);
+    var sessionDisplay = d.toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' }) + (sessionTime ? ' ' + sessionTime : '');
+    Object.keys(sessionEntries).forEach(function(student) {
+      var e = sessionEntries[student];
+      if (e && e.zone) {
+        rows.push({
+          date: sessionDate,
+          displayDate: sessionDisplay,
+          student: student,
+          zone: ZONE_COLORS[e.zone].label,
+          feeling: e.feeling
+        });
+      }
+    });
+  });
+
+  if (rows.length === 0) { showToast('No valid entries found'); btn.disabled = false; btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets'; return; }
+
+  try {
+    // Send as URL param to bypass CORS restrictions
+    var encoded = encodeURIComponent(JSON.stringify({ rows: rows }));
+    var url = state.webhookUrl + '?data=' + encoded;
+    await fetch(url, { method: 'GET', mode: 'no-cors' });
+    statusEl.textContent = '✓ Pushed ' + rows.length + ' entries';
+    statusEl.className = 'sheets-status ok';
+    showToast('✅ ' + rows.length + ' entries pushed to Sheets');
+  } catch(err) {
+    statusEl.textContent = 'Error: ' + err.message;
+    statusEl.className = 'sheets-status err';
+  }
+  btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets';
+  btn.disabled = false;
+}
+
+function exportCSV() {
+  const sessions = Object.keys(state.log).sort();
+  const rows = [];
+  rows.push(['Student', ...sessions]);
+  state.students.forEach(name => {
+    rows.push([name, ...sessions.map(sk => {
+      const e = (state.log[sk]||{})[name];
+      return e ? `${ZONE_COLORS[e.zone].label} - ${e.feeling}` : '';
+    })]);
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  Object.assign(document.createElement('a'),{href:url,download:`${state.className}_zones.csv`}).click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported ✓');
+}
+
+function getLocalDateStr() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+let pendingAction = null;
+
+function showConfirm(msg, action) {
+  pendingAction = action;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-bar').style.display = 'flex';
+}
+function confirmAction() {
+  document.getElementById('confirm-bar').style.display = 'none';
+  if (pendingAction) { pendingAction(); pendingAction = null; }
+}
+function cancelAction() {
+  document.getElementById('confirm-bar').style.display = 'none';
+  pendingAction = null;
+}
+
+function resetToday() {
+  const allKeys = Object.keys(state.log);
+  if (allKeys.length === 0) { showToast('Nothing to reset'); return; }
+  const today = getLocalDateStr();
+  const todayKeys = allKeys.filter(k => k.startsWith(today));
+  const keysToDelete = todayKeys.length > 0 ? todayKeys : [allKeys[allKeys.length - 1]];
+  const totalEntries = keysToDelete.reduce((n,k) => n + Object.keys(state.log[k]).length, 0);
+  showConfirm(`Reset today's ${totalEntries} check-in(s)? Students can check in again.`, () => {
+    keysToDelete.forEach(k => { delete state.log[k]; });
+    saveState(); renderDataScreen();
+    showToast(`Reset ✓ — ${totalEntries} entries cleared`);
+  });
+}
+
+function clearData() {
+  showConfirm('Clear ALL data from every day? This cannot be undone.', () => {
+    state.log = {}; saveState(); renderDataScreen(); showToast('All data cleared');
+  });
+}
+
+function saveSetup() {
+  const classname = document.getElementById('setup-classname').value.trim();
+  const studentsRaw = document.getElementById('setup-students').value.trim();
+  const pin = String(document.getElementById('setup-pin').value).trim();
+  const webhook = document.getElementById('setup-webhook').value.trim();
+  if (!studentsRaw) { showToast('Please add student names'); return; }
+  const students = studentsRaw.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!students.length) { showToast('No valid names found'); return; }
+  if (pin && (pin.length!==4 || !/^\d{4}$/.test(pin))) { showToast('PIN must be 4 digits'); return; }
+  state.className = classname||'4C';
+  state.students = students;
+  if (pin) state.pin = pin;
+  state.webhookUrl = webhook;
+  saveState();
+  showToast('Settings saved ✓');
+  goHome();
+}
+
+// SCRIPT MODAL
+function showScriptModal() { document.getElementById('script-modal').classList.add('open'); }
+function closeScriptModal() { document.getElementById('script-modal').classList.remove('open'); }
+function copyScript() {
+  const code = document.getElementById('script-code').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('Script copied ✓')).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = code; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Script copied ✓');
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+window.addEventListener('load', () => {
+  loadState();
+  if (state.students.length > 0) goHome();
+  else setScreen('setup-screen');
+});
+window.addEventListener('resize', () => {
+  const id = document.querySelector('.screen.active')?.id;
+  if (id==='zone-screen') renderZoneBubbles();
+  if (id==='feeling-screen') renderFeelingBubbles();
+});
+</script>
+</body>
+</html>
