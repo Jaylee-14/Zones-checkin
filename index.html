@@ -846,20 +846,45 @@ async function pushToSheets() {
 
   if (rows.length === 0) { showToast('No valid entries found'); btn.disabled = false; btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets'; return; }
 
-  try {
-    // Send as URL param to bypass CORS restrictions
-    var encoded = encodeURIComponent(JSON.stringify({ rows: rows }));
-    var url = state.webhookUrl + '?data=' + encoded;
-    await fetch(url, { method: 'GET', mode: 'no-cors' });
-    statusEl.textContent = '✓ Pushed ' + rows.length + ' entries';
-    statusEl.className = 'sheets-status ok';
-    showToast('✅ ' + rows.length + ' entries pushed to Sheets');
-  } catch(err) {
-    statusEl.textContent = 'Error: ' + err.message;
-    statusEl.className = 'sheets-status err';
+  // Send each row via JSONP — bypasses CORS completely
+  var pushed = 0;
+  function sendNext(i) {
+    if (i >= rows.length) {
+      statusEl.textContent = '✓ Pushed ' + pushed + ' entries';
+      statusEl.className = 'sheets-status ok';
+      showToast('✅ ' + pushed + ' entries pushed to Sheets');
+      btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets';
+      btn.disabled = false;
+      return;
+    }
+    var r = rows[i];
+    var cbName = 'cb_' + Date.now() + '_' + i;
+    var url = state.webhookUrl
+      + '?action=write'
+      + '&callback=' + cbName
+      + '&date=' + encodeURIComponent(r.date)
+      + '&time=' + encodeURIComponent(r.displayDate)
+      + '&student=' + encodeURIComponent(r.student)
+      + '&zone=' + encodeURIComponent(r.zone)
+      + '&feeling=' + encodeURIComponent(r.feeling);
+    window[cbName] = function(data) {
+      delete window[cbName];
+      document.getElementById(cbName) && document.getElementById(cbName).remove();
+      if (data && data.status === 'ok') pushed++;
+      sendNext(i + 1);
+    };
+    var script = document.createElement('script');
+    script.id = cbName;
+    script.src = url;
+    script.onerror = function() {
+      delete window[cbName];
+      script.remove();
+      sendNext(i + 1);
+    };
+    document.body.appendChild(script);
   }
-  btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets';
-  btn.disabled = false;
+  sendNext(0);
+  return;
 }
 
 function exportCSV() {
