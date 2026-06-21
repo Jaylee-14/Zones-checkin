@@ -22,6 +22,15 @@ body { background: #0a0a0a !important; color: #ffffff; font-family: 'DM Sans', s
 .screen { display: none; position: absolute; inset: 0; overflow: hidden; }
 .screen.active { display: flex; flex-direction: column; }
 
+/* SYNC INDICATOR */
+#sync-bar { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: transparent; z-index: 9998; transition: background 0.3s; }
+#sync-bar.syncing { background: linear-gradient(90deg, transparent, var(--green3), transparent); animation: syncSlide 1.2s ease-in-out infinite; }
+#sync-bar.error { background: var(--red3); animation: none; }
+@keyframes syncSlide { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+#sync-status { position: fixed; top: 0.5rem; right: 0.75rem; font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,0.4); z-index: 9997; letter-spacing: 0.05em; transition: color 0.3s; pointer-events: none; }
+#sync-status.ok { color: var(--green3); }
+#sync-status.err { color: var(--red3); }
+
 /* HOME */
 #home-screen { align-items: center; justify-content: center; }
 .home-bubbles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -64,10 +73,6 @@ body { background: #0a0a0a !important; color: #ffffff; font-family: 'DM Sans', s
 .name-row.done-red   { background: rgba(232,82,74,0.15);  border-color: rgba(232,82,74,0.35); }
 .name-text { font-size: 1.05rem; font-weight: 600; }
 .name-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.7rem; border-radius: 20px; opacity: 0.9; }
-.badge-blue   { background: rgba(91,155,213,0.25);  color: #9DCAEF; }
-.badge-green  { background: rgba(76,175,125,0.25);  color: #7DDBA8; }
-.badge-yellow { background: rgba(245,200,66,0.25);  color: #FFD866; }
-.badge-red    { background: rgba(232,82,74,0.25);   color: #FF9B95; }
 
 /* ZONE / FEELING SCREENS */
 .zone-student-name { padding: 0.5rem 1.5rem 0; font-size: 1rem; color: var(--muted); flex-shrink: 0; }
@@ -146,7 +151,6 @@ body { background: #0a0a0a !important; color: #ffffff; font-family: 'DM Sans', s
 .stat-yellow .stat-num { color: var(--yellow3); }
 .stat-red    .stat-num { color: var(--red3); }
 
-/* Sheets push button row */
 .sheets-row { display: flex; gap: 0.75rem; margin-bottom: 1rem; align-items: stretch; }
 .sheets-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(52,168,83,0.15); border: 1px solid rgba(52,168,83,0.35); color: #5FCF80; border-radius: 10px; padding: 0.7rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s; }
 .sheets-btn:hover { background: rgba(52,168,83,0.25); }
@@ -157,7 +161,6 @@ body { background: #0a0a0a !important; color: #ffffff; font-family: 'DM Sans', s
 .clear-btn { background: rgba(232,82,74,0.1); border: 1px solid rgba(232,82,74,0.25); color: var(--red3); border-radius: 10px; padding: 0.7rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
 .clear-btn:hover { background: rgba(232,82,74,0.2); }
 
-/* Sheets status */
 .sheets-status { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.75rem; min-height: 1.1rem; }
 .sheets-status.ok { color: #5FCF80; }
 .sheets-status.err { color: var(--red3); }
@@ -221,48 +224,36 @@ tbody tr:hover .td-name { background: rgba(28,28,28,0.98); }
 
 /* ===== LANDSCAPE LAYOUT ===== */
 @media (orientation: landscape) {
-
-  /* HOME — left panel text, right panel bubbles */
   #home-screen { flex-direction: row; }
   .home-center { flex: 0 0 45%; text-align: left; padding: 2rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
   .home-center h1 { font-size: clamp(1.6rem,3.5vw,2.4rem); margin-bottom: 0.3rem; }
   .home-center .date-chip { margin-bottom: 1rem; }
   .home-center .sub { margin-bottom: 1.5rem; }
   .home-footer { bottom: 1rem; right: 1rem; }
-
-  /* HEADER — slimmer */
   .screen-header { padding: 0.65rem 1.5rem 0.6rem; }
   .screen-header h2 { font-size: 1.15rem; }
-
-  /* NAMES — two column grid */
   .names-prompt { padding: 0.6rem 1.5rem 0.4rem; }
   .names-scroll { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0.45rem; padding: 0.5rem 1.25rem 1rem; align-content: start; }
   .name-row { padding: 0.65rem 1rem; }
   .name-text { font-size: 0.95rem; }
-
-  /* ZONE — compact header, larger bubble area */
   .zone-student-name { padding: 0.3rem 1.5rem 0; font-size: 0.9rem; }
   .zone-question { padding: 0.3rem 1.5rem 0.5rem; font-size: clamp(1.1rem,2.5vw,1.5rem); }
-
-  /* FEELING — compact header */
   .feeling-zone-label { padding: 0 1.5rem 0.4rem; }
   .feeling-question { padding: 0 1.5rem 0.5rem; font-size: clamp(1.1rem,2.5vw,1.5rem); }
-
-  /* DATA — side by side stats */
   .data-content { padding: 0.75rem 1.25rem 1rem; }
   .data-stats { grid-template-columns: repeat(4,1fr); gap: 0.5rem; margin-bottom: 0.75rem; }
   .stat-num { font-size: 1.3rem; }
-
-  /* PIN — horizontal */
   #pin-screen { flex-direction: row; justify-content: center; gap: 4rem; }
-
-  /* SETUP — wider columns */
   .setup-inner { padding-top: 0; }
   .field-label { margin-top: 1rem; }
 }
 </style>
 </head>
 <body style="background:#0a0a0a;margin:0;padding:0;">
+
+<!-- SYNC INDICATOR -->
+<div id="sync-bar"></div>
+<div id="sync-status"></div>
 
 <!-- HOME -->
 <div id="home-screen" class="screen active">
@@ -419,8 +410,7 @@ tbody tr:hover .td-name { background: rgba(28,28,28,0.98); }
       <!-- SHEETS SECTION -->
       <div class="section-divider">
         <div class="section-title">📊 Google Sheets Integration</div>
-        <div class="section-sub">Connect once — then push today's data to your spreadsheet with one tap from the Data screen.</div>
-
+        <div class="section-sub">Push today's data to your spreadsheet with one tap from the Data screen.</div>
         <label class="field-label">Apps Script Webhook URL</label>
         <input type="url" id="setup-webhook" class="dark-input" placeholder="https://script.google.com/macros/s/…/exec" />
         <p class="hint-text">Paste your Google Apps Script Web App URL here. Don't have one yet? <a href="#" onclick="showScriptModal(); return false;">Tap here for setup instructions →</a></p>
@@ -435,66 +425,234 @@ tbody tr:hover .td-name { background: rgba(28,28,28,0.98); }
 <div class="modal-overlay" id="script-modal">
   <div class="script-modal">
     <h3>Set up Google Sheets</h3>
-    <p class="modal-sub">This takes about 3 minutes. You only do it once. Every check-in will then appear in your spreadsheet automatically.</p>
-
-    <div class="step-row"><span class="step-num">1</span><div>Go to <strong>sheets.google.com</strong> and create a new spreadsheet. Name it <em>"4C Zones Check-In Log"</em>.</div></div>
-    <div class="step-row"><span class="step-num">2</span><div>In the spreadsheet, click <strong>Extensions → Apps Script</strong>.</div></div>
-    <div class="step-row"><span class="step-num">3</span><div>Delete everything in the editor and paste in this code:</div></div>
-
+    <p class="modal-sub">This takes about 3 minutes. You only do it once.</p>
+    <div class="step-row"><span class="step-num">1</span><div>Go to <strong>sheets.google.com</strong> and create a new spreadsheet.</div></div>
+    <div class="step-row"><span class="step-num">2</span><div>Click <strong>Extensions → Apps Script</strong>.</div></div>
+    <div class="step-row"><span class="step-num">3</span><div>Delete everything and paste this code:</div></div>
     <button class="copy-code-btn" onclick="copyScript()">📋 Copy Script Code</button>
     <div class="code-block" id="script-code">function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName("Log") || ss.insertSheet("Log");
-    
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(["Timestamp", "Session", "Student", "Zone", "Feeling"]);
       sheet.getRange(1,1,1,5).setFontWeight("bold");
     }
-    
     var timestamp = new Date().toLocaleString("en-AU");
     var rows = data.rows;
-    
     for (var i = 0; i < rows.length; i++) {
-      sheet.appendRow([
-        timestamp,
-        rows[i].session,
-        rows[i].student,
-        rows[i].zone,
-        rows[i].feeling
-      ]);
+      sheet.appendRow([timestamp, rows[i].session, rows[i].student, rows[i].zone, rows[i].feeling]);
     }
-    
-    return ContentService
-      .createTextOutput(JSON.stringify({status:"ok", added: rows.length}))
-      .setMimeType(ContentService.MimeType.JSON);
-      
+    return ContentService.createTextOutput(JSON.stringify({status:"ok", added: rows.length})).setMimeType(ContentService.MimeType.JSON);
   } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({status:"error", message: err.toString()}))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({status:"error", message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({status:"ok", message:"Zones Check-In webhook active"}))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    var p = (e && e.parameter) ? e.parameter : {};
+    if (p.action === 'write' && p.student) {
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = ss.getSheetByName("Log") || ss.insertSheet("Log");
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(["Timestamp", "Date", "Session", "Student", "Zone", "Feeling"]);
+        sheet.getRange(1,1,1,6).setFontWeight("bold");
+      }
+      var timestamp = new Date().toLocaleString("en-AU");
+      sheet.appendRow([timestamp, p.date || '', p.time || '', p.student, p.zone || '', p.feeling || '']);
+      var result = JSON.stringify({status:"ok"});
+      if (p.callback) {
+        return ContentService.createTextOutput(p.callback + '(' + result + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+      }
+      return ContentService.createTextOutput(result).setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify({status:"ok", message:"Zones Check-In webhook active"})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    var errResult = JSON.stringify({status:"error", message: err.toString()});
+    if (e && e.parameter && e.parameter.callback) {
+      return ContentService.createTextOutput(e.parameter.callback + '(' + errResult + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(errResult).setMimeType(ContentService.MimeType.JSON);
+  }
 }</div>
-
-    <div class="step-row"><span class="step-num">4</span><div>Click <strong>Save</strong> (💾), then click <strong>Deploy → New deployment</strong>.</div></div>
-    <div class="step-row"><span class="step-num">5</span><div>Set type to <strong>Web app</strong>. Set "Execute as" to <strong>Me</strong>. Set "Who has access" to <strong>Anyone</strong>. Click <strong>Deploy</strong>.</div></div>
-    <div class="step-row"><span class="step-num">6</span><div>Copy the <strong>Web app URL</strong> it gives you. It starts with <em>https://script.google.com/macros/s/…</em></div></div>
-    <div class="step-row"><span class="step-num">7</span><div>Paste that URL into <strong>Settings → Apps Script Webhook URL</strong> in this app. Done! ✅</div></div>
-
+    <div class="step-row"><span class="step-num">4</span><div>Click <strong>Deploy → New deployment → Web app</strong>. Set "Execute as" <strong>Me</strong>, "Who has access" <strong>Anyone</strong>. Deploy and copy the URL.</div></div>
+    <div class="step-row"><span class="step-num">5</span><div>Paste the URL into <strong>Settings → Apps Script Webhook URL</strong>. Done! ✅</div></div>
     <button class="modal-close" onclick="closeScriptModal()">Got it — close</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, deleteField, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── Firebase config ──────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCqVpm96W6z5EGsOU4jkt9lPCW-ve5xx9c",
+  authDomain: "c-zones-checkin.firebaseapp.com",
+  projectId: "c-zones-checkin",
+  storageBucket: "c-zones-checkin.firebasestorage.app",
+  messagingSenderId: "54946789080",
+  appId: "1:54946789080:web:6090824a372d62750dc9ad",
+  measurementId: "G-S9Z6S8XF6E"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── Firestore document references ────────────────────────────────
+const CONFIG_DOC  = doc(db, 'zones4c', 'config');
+const LOG_DOC     = doc(db, 'zones4c', 'log');
+
+// ── Sync indicator helpers ────────────────────────────────────────
+function setSyncing() {
+  document.getElementById('sync-bar').className = 'syncing';
+  document.getElementById('sync-status').textContent = 'Syncing…';
+  document.getElementById('sync-status').className = '';
+}
+function setSynced() {
+  document.getElementById('sync-bar').className = '';
+  document.getElementById('sync-status').textContent = '✓ Synced';
+  document.getElementById('sync-status').className = 'ok';
+  setTimeout(() => {
+    document.getElementById('sync-status').textContent = '';
+    document.getElementById('sync-status').className = '';
+  }, 2000);
+}
+function setSyncError() {
+  document.getElementById('sync-bar').className = 'error';
+  document.getElementById('sync-status').textContent = '⚠ Sync error';
+  document.getElementById('sync-status').className = 'err';
+}
+
+// ── Load initial state from Firestore, then start live listener ──
+async function initFirebase() {
+  try {
+    setSyncing();
+
+    // Load config (students, className, pin, webhookUrl)
+    const cfgSnap = await getDoc(CONFIG_DOC);
+    if (cfgSnap.exists()) {
+      const cfg = cfgSnap.data();
+      if (cfg.students)   state.students   = cfg.students;
+      if (cfg.className)  state.className  = cfg.className;
+      if (cfg.pin)        state.pin        = cfg.pin;
+      if (cfg.webhookUrl !== undefined) state.webhookUrl = cfg.webhookUrl;
+    } else {
+      // First run — write defaults to Firestore
+      await setDoc(CONFIG_DOC, {
+        students:   state.students,
+        className:  state.className,
+        pin:        state.pin,
+        webhookUrl: state.webhookUrl
+      });
+    }
+
+    // Load log snapshot
+    const logSnap = await getDoc(LOG_DOC);
+    if (logSnap.exists()) {
+      state.log = logSnap.data() || {};
+    }
+
+    setSynced();
+
+    // Start real-time listener on log so Data screen updates live
+    onSnapshot(LOG_DOC, (snap) => {
+      if (snap.exists()) {
+        state.log = snap.data() || {};
+        // Refresh Data screen if it's open
+        const active = document.querySelector('.screen.active');
+        if (active && active.id === 'data-screen') renderDataScreen();
+        // Refresh names screen too if open
+        if (active && active.id === 'names-screen') renderNames();
+      }
+    });
+
+    // Start app
+    if (state.students.length > 0) goHome();
+    else setScreen('setup-screen');
+
+  } catch (err) {
+    console.error('Firebase init error:', err);
+    setSyncError();
+    showToast('⚠ Could not connect to Firebase');
+    // Fall back to localStorage
+    loadStateLocal();
+    if (state.students.length > 0) goHome();
+    else setScreen('setup-screen');
+  }
+}
+
+// ── Save config to Firestore ──────────────────────────────────────
+window.saveStateConfig = async function() {
+  try {
+    setSyncing();
+    await setDoc(CONFIG_DOC, {
+      students:   state.students,
+      className:  state.className,
+      pin:        state.pin,
+      webhookUrl: state.webhookUrl || ''
+    });
+    setSynced();
+  } catch(e) {
+    console.error('Config save error:', e);
+    setSyncError();
+  }
+};
+
+// ── Save a single check-in entry to Firestore ─────────────────────
+window.saveCheckinToFirebase = async function(sessionKey, student, entry) {
+  try {
+    setSyncing();
+    // Firestore field key: "sessionKey__studentName" (no dots/slashes)
+    const fieldKey = (sessionKey + '__' + student).replace(/[^a-zA-Z0-9_\- ]/g, '_');
+    // Store nested: log document has fields like "2026-06-21 09:30__Amelia"
+    // We store the full log as a flat map for simplicity
+    await setDoc(LOG_DOC, { [sessionKey]: { ...(state.log[sessionKey] || {}), [student]: entry } }, { merge: true });
+    setSynced();
+  } catch(e) {
+    console.error('Check-in save error:', e);
+    setSyncError();
+    showToast('⚠ Saved locally — sync failed');
+  }
+};
+
+// ── Delete entries from Firestore ─────────────────────────────────
+window.deleteLogKeysFromFirebase = async function(keys) {
+  try {
+    setSyncing();
+    const updates = {};
+    keys.forEach(k => { updates[k] = deleteField(); });
+    await updateDoc(LOG_DOC, updates);
+    setSynced();
+  } catch(e) {
+    // If doc doesn't exist yet, just ignore
+    console.warn('Delete log keys:', e);
+    setSynced();
+  }
+};
+
+window.clearAllLogFromFirebase = async function() {
+  try {
+    setSyncing();
+    await setDoc(LOG_DOC, {});
+    setSynced();
+  } catch(e) {
+    console.error('Clear all error:', e);
+    setSyncError();
+  }
+};
+
+// ── Kick off ──────────────────────────────────────────────────────
+initFirebase();
+</script>
+
 <script>
+// ── Zone / Feeling data ──────────────────────────────────────────
 const ZONE_COLORS = {
   blue:   { main:'#5B9BD5', light:'#7AB8E8', dark:'#3A6E9E', label:'Blue Zone',   emoji:'😔', desc:'Sad · tired · bored · sick' },
   green:  { main:'#4CAF7D', light:'#6DD4A0', dark:'#2E7A55', label:'Green Zone',  emoji:'😊', desc:'Happy · calm · focused · ready' },
@@ -509,15 +667,19 @@ const FEELINGS = {
   red:    ['Angry','Furious','Terrified','Panicked','Explosive','Devastated','Enraged','Out of control','Frantic','Livid','Shocked','Stressed','Annoyed','Overwhelmed','Impulsive']
 };
 
-let state = { students:["Aadvik","Alara","Ayaan","Ayberk","Bihaan","Calvin","Camila","Flynn","Gurnaz","Harriet","Jacob","Jasmira","Jay","Lein","Lila","Lina","Louis","Oliver","Olivia","Roxy","Sandra","Tiffany A","Tiffany W","Vincent"], className:'4C', pin:'1234', webhookUrl:'', log:{} };
-let currentStudent=null, selectedZone=null, selectedFeeling=null, pinEntry='';
+// ── App state (in-memory; Firebase is the source of truth) ───────
+let state = {
+  students: ["Aadvik","Alara","Ayaan","Ayberk","Bihaan","Calvin","Camila","Flynn","Gurnaz","Harriet","Jacob","Jasmira","Jay","Lein","Lila","Lina","Louis","Oliver","Olivia","Roxy","Sandra","Tiffany A","Tiffany W","Vincent"],
+  className: '4C', pin: '1234', webhookUrl: '', log: {}
+};
+let currentStudent = null, selectedZone = null, selectedFeeling = null, pinEntry = '';
 
-function loadState() {
-  try { const s = localStorage.getItem('zones-v3'); if(s){ state=JSON.parse(s); return true; } } catch(e){}
-  return false;
+// ── Local storage fallback ────────────────────────────────────────
+function loadStateLocal() {
+  try { const s = localStorage.getItem('zones-v3'); if(s) { const p = JSON.parse(s); Object.assign(state, p); } } catch(e) {}
 }
-function saveState() { localStorage.setItem('zones-v3', JSON.stringify(state)); }
 
+// ── Session key ───────────────────────────────────────────────────
 function getSessionKey() {
   const date = getLocalDateStr();
   const existing = Object.keys(state.log).find(k => k.startsWith(date));
@@ -528,6 +690,12 @@ function getSessionKey() {
   return `${date} ${hh}:${mm}`;
 }
 
+function getLocalDateStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
+// ── Screen management ─────────────────────────────────────────────
 function setScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -543,17 +711,18 @@ function goHome() {
 }
 
 function goToNames() { setScreen('names-screen'); renderNames(); }
-function goToPin() { pinEntry=''; renderPinDots(); setScreen('pin-screen'); }
-function backToZone() { setScreen('zone-screen'); }
+function goToPin()   { pinEntry=''; renderPinDots(); setScreen('pin-screen'); }
+function backToZone(){ setScreen('zone-screen'); }
 
 function showSetup() {
   document.getElementById('setup-classname').value = state.className;
-  document.getElementById('setup-students').value = state.students.join('\n');
-  document.getElementById('setup-pin').value = state.pin;
-  document.getElementById('setup-webhook').value = state.webhookUrl || '';
+  document.getElementById('setup-students').value  = state.students.join('\n');
+  document.getElementById('setup-pin').value       = state.pin;
+  document.getElementById('setup-webhook').value   = state.webhookUrl || '';
   setScreen('setup-screen');
 }
 
+// ── Home bubbles ──────────────────────────────────────────────────
 function renderHomeBubbles() {
   const el = document.getElementById('home-bg');
   const bubbles = [
@@ -569,11 +738,12 @@ function renderHomeBubbles() {
   ).join('');
 }
 
+// ── Names screen ──────────────────────────────────────────────────
 function renderNames() {
-  const list = document.getElementById('names-list');
-  const sk = getSessionKey();
+  const list  = document.getElementById('names-list');
+  const sk    = getSessionKey();
   const todayLog = state.log[sk] || {};
-  const done = state.students.filter(n => todayLog[n]).length;
+  const done  = state.students.filter(n => todayLog[n]).length;
   const total = state.students.length;
   document.getElementById('names-progress').style.width = (total > 0 ? done/total*100 : 0) + '%';
   document.getElementById('names-count-label').textContent =
@@ -592,6 +762,7 @@ function renderNames() {
   }).join('');
 }
 
+// ── Zone screen ───────────────────────────────────────────────────
 function selectStudent(name) {
   currentStudent = name; selectedZone = null; selectedFeeling = null;
   const sk = getSessionKey();
@@ -615,39 +786,27 @@ function renderZoneBubbles() {
   ];
   area.style.overflow = 'hidden';
   area.innerHTML = layout.map(function(item) {
-    var zone = item.zone;
-    var cx = item.cx;
-    var cy = item.cy;
+    var zone = item.zone, cx = item.cx, cy = item.cy;
     var c = ZONE_COLORS[zone];
     var sel = selectedZone === zone;
     var r = sel ? R * 1.08 : R;
-    var shadow = sel
-      ? '0 0 0 6px rgba(255,255,255,0.5),0 16px 50px ' + c.main + '99'
-      : '0 8px 30px ' + c.main + '44';
-    return '<div class="zone-bubble ' + (sel ? 'selected' : '') + '"'
-      + ' data-zone="' + zone + '"'
-      + ' onclick="selectZone(this.dataset.zone)"'
-      + ' style="'
-      + 'left:' + (cx - r) + 'px;'
-      + 'top:' + (cy - r) + 'px;'
-      + 'width:' + (r * 2) + 'px;'
-      + 'height:' + (r * 2) + 'px;'
-      + 'background:' + c.main + ';'
-      + 'box-shadow:' + shadow + ';'
-      + 'z-index:' + (sel ? 2 : 1) + ';'
-      + '">'
-      + '<div class="b-name" style="font-size:' + (r * 0.13) + 'px;">' + c.label + '</div>'
-      + '<div class="b-desc" style="font-size:' + (r * 0.073) + 'px;">' + c.desc + '</div>'
-      + '</div>';
+    var shadow = sel ? '0 0 0 6px rgba(255,255,255,0.5),0 16px 50px '+c.main+'99' : '0 8px 30px '+c.main+'44';
+    return '<div class="zone-bubble '+(sel?'selected':'')+'"'
+      +' data-zone="'+zone+'"'
+      +' onclick="selectZone(this.dataset.zone)"'
+      +' style="left:'+(cx-r)+'px;top:'+(cy-r)+'px;width:'+(r*2)+'px;height:'+(r*2)+'px;background:'+c.main+';box-shadow:'+shadow+';z-index:'+(sel?2:1)+';">'
+      +'<div class="b-name" style="font-size:'+(r*0.13)+'px;">'+c.label+'</div>'
+      +'<div class="b-desc" style="font-size:'+(r*0.073)+'px;">'+c.desc+'</div>'
+      +'</div>';
   }).join('');
   updateZoneBar();
 }
 
-function selectZone(z) { selectedZone=z; selectedFeeling=null; renderZoneBubbles(); }
+function selectZone(z) { selectedZone = z; selectedFeeling = null; renderZoneBubbles(); }
 
 function updateZoneBar() {
   const bar = document.getElementById('zone-bottom-bar');
-  bar.className = 'bottom-bar' + (selectedZone?' '+selectedZone+'-bar':'');
+  bar.className = 'bottom-bar'+(selectedZone?' '+selectedZone+'-bar':'');
   document.getElementById('zone-sel-label').textContent = selectedZone ? ZONE_COLORS[selectedZone].label : 'Tap a colour to begin';
   document.getElementById('zone-confirm-btn').disabled = !selectedZone;
 }
@@ -661,6 +820,7 @@ function confirmZone() {
   setScreen('feeling-screen');
 }
 
+// ── Feeling screen ────────────────────────────────────────────────
 function renderFeelingBubbles() {
   var area = document.getElementById('feelings-area');
   var W = area.offsetWidth || 360;
@@ -683,29 +843,17 @@ function renderFeelingBubbles() {
     var cy = row * rowH + R + 4;
     var sel = selectedFeeling === f;
     var fsize = r * (f.length > 10 ? 0.19 : f.length > 7 ? 0.23 : 0.27);
-    var shadow = sel
-      ? '0 0 0 5px rgba(255,255,255,0.5),0 8px 30px ' + c.main + '88'
-      : '0 4px 16px ' + c.main + '33';
-    return '<div class="feeling-bubble ' + (sel ? 'selected' : '') + '"'
-      + ' onclick="selectFeeling(this.dataset.name)"'
-      + ' data-name="' + f.replace(/"/g, '&quot;') + '"'
-      + ' style="'
-      + 'left:' + (cx - r) + 'px;'
-      + 'top:' + (cy - r) + 'px;'
-      + 'width:' + (r * 2) + 'px;'
-      + 'height:' + (r * 2) + 'px;'
-      + 'background:' + c.main + ';'
-      + 'font-size:' + fsize + 'px;'
-      + 'font-weight:' + (sel ? 700 : 600) + ';'
-      + 'box-shadow:' + shadow + ';'
-      + 'transform:' + (sel ? 'scale(1.1)' : 'scale(1)') + ';'
-      + 'z-index:' + (sel ? 3 : 1) + ';'
-      + '">' + f + '</div>';
+    var shadow = sel ? '0 0 0 5px rgba(255,255,255,0.5),0 8px 30px '+c.main+'88' : '0 4px 16px '+c.main+'33';
+    return '<div class="feeling-bubble '+(sel?'selected':'')+'"'
+      +' onclick="selectFeeling(this.dataset.name)"'
+      +' data-name="'+f.replace(/"/g,'&quot;')+'"'
+      +' style="left:'+(cx-r)+'px;top:'+(cy-r)+'px;width:'+(r*2)+'px;height:'+(r*2)+'px;background:'+c.main+';font-size:'+fsize+'px;font-weight:'+(sel?700:600)+';box-shadow:'+shadow+';transform:'+(sel?'scale(1.1)':'scale(1)')+';z-index:'+(sel?3:1)+';">'
+      +f+'</div>';
   }).join('');
   updateFeelingBar();
 }
 
-function selectFeeling(name) { selectedFeeling=name; renderFeelingBubbles(); }
+function selectFeeling(name) { selectedFeeling = name; renderFeelingBubbles(); }
 
 function updateFeelingBar() {
   document.getElementById('feeling-bottom-bar').className = 'bottom-bar'+(selectedZone?' '+selectedZone+'-bar':'');
@@ -713,12 +861,19 @@ function updateFeelingBar() {
   document.getElementById('feeling-confirm-btn').disabled = !selectedFeeling;
 }
 
-function saveCheckin() {
+// ── Save check-in ─────────────────────────────────────────────────
+async function saveCheckin() {
   if (!selectedZone || !selectedFeeling) return;
   const sk = getSessionKey();
   if (!state.log[sk]) state.log[sk] = {};
-  state.log[sk][currentStudent] = { zone: selectedZone, feeling: selectedFeeling };
-  saveState();
+  const entry = { zone: selectedZone, feeling: selectedFeeling };
+  state.log[sk][currentStudent] = entry;
+
+  // Save to Firebase
+  if (window.saveCheckinToFirebase) {
+    await window.saveCheckinToFirebase(sk, currentStudent, entry);
+  }
+
   const c = ZONE_COLORS[selectedZone];
   document.getElementById('done-bubble').style.background = c.main;
   document.getElementById('done-bubble').textContent = c.emoji;
@@ -728,17 +883,17 @@ function saveCheckin() {
   setScreen('done-screen');
 }
 
-// PIN
+// ── PIN ───────────────────────────────────────────────────────────
 function renderPinDots() {
   document.querySelectorAll('.pin-dot').forEach((d,i) => { d.classList.toggle('filled', i<pinEntry.length); d.classList.remove('error'); });
   document.getElementById('pin-error').textContent = '';
 }
 function pinKey(k) {
-  if (pinEntry.length>=4) return;
+  if (pinEntry.length >= 4) return;
   pinEntry += k; renderPinDots();
-  if (pinEntry.length===4) {
+  if (pinEntry.length === 4) {
     setTimeout(() => {
-      if (pinEntry===state.pin) { pinEntry=''; renderDataScreen(); setScreen('data-screen'); }
+      if (pinEntry === state.pin) { pinEntry=''; renderDataScreen(); setScreen('data-screen'); }
       else {
         document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
         document.getElementById('pin-error').textContent = 'Incorrect PIN';
@@ -747,26 +902,25 @@ function pinKey(k) {
     }, 150);
   }
 }
-function pinDel() { if (pinEntry.length>0) { pinEntry=pinEntry.slice(0,-1); renderPinDots(); } }
+function pinDel() { if (pinEntry.length > 0) { pinEntry = pinEntry.slice(0,-1); renderPinDots(); } }
 
-// DATA
+// ── Data screen ───────────────────────────────────────────────────
 function renderDataScreen() {
   const sessions = Object.keys(state.log).sort().reverse();
   const sk = getSessionKey();
   const todayData = state.log[sk] || {};
   const counts = {blue:0,green:0,yellow:0,red:0};
-  Object.values(todayData).forEach(e => { if(e.zone) counts[e.zone]++; });
+  Object.values(todayData).forEach(e => { if(e && e.zone) counts[e.zone]++; });
 
   document.getElementById('data-stats').innerHTML = Object.entries(counts).map(([z,n]) =>
     `<div class="stat-card stat-${z}"><div class="stat-num">${n}</div><div class="stat-label">${ZONE_COLORS[z].label.replace(' Zone','')}</div></div>`
   ).join('');
 
-  // Update push button state
   const hasWebhook = !!state.webhookUrl;
   const btn = document.getElementById('sheets-push-btn');
   btn.disabled = !hasWebhook;
   if (!hasWebhook) {
-    document.getElementById('sheets-status').textContent = 'No webhook URL set — go to Settings to connect Google Sheets';
+    document.getElementById('sheets-status').textContent = 'No webhook URL — go to Settings to connect Google Sheets';
     document.getElementById('sheets-status').className = 'sheets-status';
   } else {
     document.getElementById('sheets-status').textContent = '';
@@ -799,7 +953,7 @@ function renderDataScreen() {
     `<table><thead><tr><th class="th-name">Student</th>${headerCols}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 
-// PUSH TO SHEETS
+// ── Push to Sheets (JSONP) ────────────────────────────────────────
 async function pushToSheets() {
   if (!state.webhookUrl) { showToast('No webhook URL — check Settings'); return; }
   var btn = document.getElementById('sheets-push-btn');
@@ -809,12 +963,6 @@ async function pushToSheets() {
   statusEl.className = 'sheets-status';
   statusEl.textContent = 'Sending to Google Sheets…';
 
-  // Build today's date strings
-  var now = new Date();
-  var today = getLocalDateStr();
-  var displayDate = now.toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' });
-
-  // Push ALL sessions in the log
   var allKeys = Object.keys(state.log);
   if (allKeys.length === 0) {
     showToast('No check-ins to push yet');
@@ -826,6 +974,7 @@ async function pushToSheets() {
   var rows = [];
   allKeys.forEach(function(sessionKey) {
     var sessionEntries = state.log[sessionKey];
+    if (!sessionEntries) return;
     var sessionDate = sessionKey.split(' ')[0];
     var sessionTime = sessionKey.split(' ')[1] || '';
     var d = new Date(sessionDate);
@@ -833,20 +982,18 @@ async function pushToSheets() {
     Object.keys(sessionEntries).forEach(function(student) {
       var e = sessionEntries[student];
       if (e && e.zone) {
-        rows.push({
-          date: sessionDate,
-          displayDate: sessionDisplay,
-          student: student,
-          zone: ZONE_COLORS[e.zone].label,
-          feeling: e.feeling
-        });
+        rows.push({ date: sessionDate, displayDate: sessionDisplay, student: student, zone: ZONE_COLORS[e.zone].label, feeling: e.feeling });
       }
     });
   });
 
-  if (rows.length === 0) { showToast('No valid entries found'); btn.disabled = false; btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets'; return; }
+  if (rows.length === 0) {
+    showToast('No valid entries found');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="sheets-icon">📊</span> Push to Google Sheets';
+    return;
+  }
 
-  // Send each row via JSONP — bypasses CORS completely
   var pushed = 0;
   function sendNext(i) {
     if (i >= rows.length) {
@@ -869,28 +1016,23 @@ async function pushToSheets() {
       + '&feeling=' + encodeURIComponent(r.feeling);
     window[cbName] = function(data) {
       delete window[cbName];
-      document.getElementById(cbName) && document.getElementById(cbName).remove();
+      var el = document.getElementById(cbName); if (el) el.remove();
       if (data && data.status === 'ok') pushed++;
       sendNext(i + 1);
     };
     var script = document.createElement('script');
     script.id = cbName;
     script.src = url;
-    script.onerror = function() {
-      delete window[cbName];
-      script.remove();
-      sendNext(i + 1);
-    };
+    script.onerror = function() { delete window[cbName]; script.remove(); sendNext(i + 1); };
     document.body.appendChild(script);
   }
   sendNext(0);
-  return;
 }
 
+// ── Export CSV ────────────────────────────────────────────────────
 function exportCSV() {
   const sessions = Object.keys(state.log).sort();
-  const rows = [];
-  rows.push(['Student', ...sessions]);
+  const rows = [['Student', ...sessions]];
   state.students.forEach(name => {
     rows.push([name, ...sessions.map(sk => {
       const e = (state.log[sk]||{})[name];
@@ -904,16 +1046,8 @@ function exportCSV() {
   showToast('CSV exported ✓');
 }
 
-function getLocalDateStr() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth()+1).padStart(2,'0');
-  const d = String(now.getDate()).padStart(2,'0');
-  return `${y}-${m}-${d}`;
-}
-
+// ── Confirm bar ───────────────────────────────────────────────────
 let pendingAction = null;
-
 function showConfirm(msg, action) {
   pendingAction = action;
   document.getElementById('confirm-msg').textContent = msg;
@@ -928,46 +1062,52 @@ function cancelAction() {
   pendingAction = null;
 }
 
+// ── Reset today / Clear all ───────────────────────────────────────
 function resetToday() {
   const allKeys = Object.keys(state.log);
   if (allKeys.length === 0) { showToast('Nothing to reset'); return; }
   const today = getLocalDateStr();
   const todayKeys = allKeys.filter(k => k.startsWith(today));
   const keysToDelete = todayKeys.length > 0 ? todayKeys : [allKeys[allKeys.length - 1]];
-  const totalEntries = keysToDelete.reduce((n,k) => n + Object.keys(state.log[k]).length, 0);
-  showConfirm(`Reset today's ${totalEntries} check-in(s)? Students can check in again.`, () => {
+  const totalEntries = keysToDelete.reduce((n,k) => n + Object.keys(state.log[k]||{}).length, 0);
+  showConfirm(`Reset today's ${totalEntries} check-in(s)? Students can check in again.`, async () => {
     keysToDelete.forEach(k => { delete state.log[k]; });
-    saveState(); renderDataScreen();
+    if (window.deleteLogKeysFromFirebase) await window.deleteLogKeysFromFirebase(keysToDelete);
+    renderDataScreen();
     showToast(`Reset ✓ — ${totalEntries} entries cleared`);
   });
 }
 
 function clearData() {
-  showConfirm('Clear ALL data from every day? This cannot be undone.', () => {
-    state.log = {}; saveState(); renderDataScreen(); showToast('All data cleared');
+  showConfirm('Clear ALL data from every day? This cannot be undone.', async () => {
+    state.log = {};
+    if (window.clearAllLogFromFirebase) await window.clearAllLogFromFirebase();
+    renderDataScreen();
+    showToast('All data cleared');
   });
 }
 
-function saveSetup() {
-  const classname = document.getElementById('setup-classname').value.trim();
+// ── Save settings ─────────────────────────────────────────────────
+async function saveSetup() {
+  const classname   = document.getElementById('setup-classname').value.trim();
   const studentsRaw = document.getElementById('setup-students').value.trim();
-  const pin = String(document.getElementById('setup-pin').value).trim();
-  const webhook = document.getElementById('setup-webhook').value.trim();
+  const pin         = String(document.getElementById('setup-pin').value).trim();
+  const webhook     = document.getElementById('setup-webhook').value.trim();
   if (!studentsRaw) { showToast('Please add student names'); return; }
   const students = studentsRaw.split('\n').map(s=>s.trim()).filter(Boolean);
   if (!students.length) { showToast('No valid names found'); return; }
   if (pin && (pin.length!==4 || !/^\d{4}$/.test(pin))) { showToast('PIN must be 4 digits'); return; }
-  state.className = classname||'4C';
-  state.students = students;
+  state.className  = classname || '4C';
+  state.students   = students;
   if (pin) state.pin = pin;
   state.webhookUrl = webhook;
-  saveState();
+  if (window.saveStateConfig) await window.saveStateConfig();
   showToast('Settings saved ✓');
   goHome();
 }
 
-// SCRIPT MODAL
-function showScriptModal() { document.getElementById('script-modal').classList.add('open'); }
+// ── Script modal ──────────────────────────────────────────────────
+function showScriptModal()  { document.getElementById('script-modal').classList.add('open'); }
 function closeScriptModal() { document.getElementById('script-modal').classList.remove('open'); }
 function copyScript() {
   const code = document.getElementById('script-code').textContent;
@@ -979,17 +1119,14 @@ function copyScript() {
   });
 }
 
+// ── Toast ─────────────────────────────────────────────────────────
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2400);
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
 }
 
-window.addEventListener('load', () => {
-  loadState();
-  if (state.students.length > 0) goHome();
-  else setScreen('setup-screen');
-});
+// ── Resize ────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
   const id = document.querySelector('.screen.active')?.id;
   if (id==='zone-screen') renderZoneBubbles();
